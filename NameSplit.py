@@ -9,21 +9,32 @@ def main():
     for name_dict in name_list:
         print("".join(["working on:", name_dict["phx_name_full"]]))
 
-        phx_last_name = re.search("([^,]+)", name_dict["phx_name_full"])
+        # Match a single character in the list
+        # + matches between 1 - unlimited times
+        # in the range A-Za-z and allows -, ' that some names have like Paul D'Angelo
+        phx_split_name = re.findall("[A-Za-z\\-\\']+", name_dict["phx_name_full"])
 
-        name_dict["phx_name_last"] = phx_last_name.group(1)
+        # If there is only two words then only update the first and last name and set mid to none
+        if len(phx_split_name) == 2:
+            # if theres only two words then theres no middle name so do a positive look behind
+            # starting at '' excluding whitespace and comma and get group 1
+            name_dict["phx_name_first"] = str(re.search("([^\\s]+(?<=)$)", name_dict["phx_name_full"]).group(1))
+            # set middle name to none as theres no middle name
+            name_dict["phx_name_mid"] = None
+            # Get group 1 excluding the comma and since last name is first it gets last name
+            name_dict["phx_name_last"] = str(re.search("([^,]+)", name_dict["phx_name_full"]).group(1))
 
-        '''
+        elif len(phx_split_name) == 3:
+            # For occasions where there is a . in the first name we need to seperate just the first and middle
+            first_middle = re.search("[^,]+$", name_dict["phx_name_full"]).group()
+            # now regex look ahead until we find a . or a whitespace
+            first = re.search("([^,]+(?=\\.)|[^,]+(?= ))", first_middle).group()
+            name_dict["phx_name_first"] = str(first)
+            name_dict["phx_name_mid"] = str(re.search("([^,\\s]+(?<=)$)", name_dict["phx_name_full"]).group(1))
+            name_dict["phx_name_last"] = str(re.search("(([^,]+))", name_dict["phx_name_full"]).group(1))
 
-        the last name updates correctly, but we forgot to update the first and middle names!
-
-        your code here
-
-
-
-
-
-        '''
+        else:
+            raise ValueError('This is bad format and needs to be in the proper format, Last, First Middle, Last, First')
 
         update_name(name_dict)
 
